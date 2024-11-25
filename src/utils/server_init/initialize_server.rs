@@ -46,7 +46,7 @@ pub async fn init_server(
     drop(ver_string);
 
     // define router
-    let router = generate_router(&state);
+    let router = generate_router(&state).await;
     stopwatch.click("routers defined");
 
     stopwatch.total("server started in");
@@ -61,6 +61,6 @@ pub async fn init_server(
             return Err(anyhow!("Axum could not serve app: {:?}", e));
         }
     };
- 
+
     Ok(())
 }

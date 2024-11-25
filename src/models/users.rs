@@ -41,9 +41,9 @@ impl FromRows for User {
 }
 
 pub struct UserForm {
-    user_screen_name: String,
-    user_email: String,
-    user_password: String,
+    pub user_screen_name: String,
+    pub user_email: String,
+    pub user_password: String,
 }
 
 impl ToInsertStmt for UserForm {
@@ -80,7 +80,7 @@ impl ToBatchInsertStmt for UserForm {
 }
 
 impl UserForm {
-    async fn insert(&self, conn: &Transaction<'_>) -> anyhow::Result<User> {
+    pub async fn insert(&self, conn: &Transaction<'_>) -> anyhow::Result<User> {
         let now = Utc::now();
         match conn
             .query_one(
@@ -101,7 +101,10 @@ impl UserForm {
         }
     }
 
-    async fn batch_insert(batch: Vec<Self>, conn: &Transaction<'_>) -> anyhow::Result<Vec<User>> {
+    pub async fn batch_insert(
+        batch: Vec<Self>,
+        conn: &Transaction<'_>,
+    ) -> anyhow::Result<Vec<User>> {
         let now = Utc::now();
         match conn
             .query_typed(
