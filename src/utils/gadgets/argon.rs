@@ -12,7 +12,7 @@ pub fn hash_password(password: &str) -> String {
         .map_err(|e| anyhow::anyhow!(e))
         .unwrap_or_else(|e| panic!("Failed to hash password: {:?}", e))
         .to_string();
-    
+
     password_hash
 }
 

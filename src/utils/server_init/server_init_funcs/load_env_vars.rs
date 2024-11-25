@@ -7,12 +7,10 @@ use dotenvy::{dotenv, var};
 pub fn load_env() -> anyhow::Result<PathBuf> {
     match dotenv() {
         Ok(path_buf) => Ok(path_buf),
-        Err(e) => {
-            Err(anyhow!(
-                "Dotenvy could not load .env file: {}",
-                e.to_string()
-            ))
-        }
+        Err(e) => Err(anyhow!(
+            "Dotenvy could not load .env file: {}",
+            e.to_string()
+        )),
     }
 }
 
