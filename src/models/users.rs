@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
-use deadpool_postgres::Transaction;
+use deadpool_postgres::{Object, Transaction};
 use tokio_postgres::types::Type;
+use uuid::Uuid;
 
 use crate::utils::gadgets::argon::hash_password;
 
@@ -37,6 +38,29 @@ impl FromRow for User {
 impl FromRows for User {
     fn from_rows(rows: Vec<tokio_postgres::Row>) -> Vec<Self> {
         rows.into_iter().map(User::from_row).collect()
+    }
+}
+
+impl User {
+    pub async fn get_by_id(conn: &Object, user_id: Uuid) -> anyhow::Result<Option<Self>> {
+        match conn
+            .query_opt("SELECT * FROM v1.users WHERE user_id = $1", &[&user_id])
+            .await
+        {
+            Ok(Some(row)) => Ok(Some(User::from_row(row))),
+            Ok(None) => Ok(None),
+            Err(e) => Err(anyhow::Error::from(e)),
+        }
+    }
+
+    pub async fn get_by_ids(conn: &Object, user_ids: Vec<Uuid>) -> anyhow::Result<Vec<Self>> {
+        let rows = conn
+            .query(
+                "SELECT * FROM v1.users WHERE user_id = ANY($1)",
+                &[&user_ids],
+            )
+            .await?;
+        Ok(User::from_rows(rows))
     }
 }
 
@@ -139,6 +163,64 @@ impl UserForm {
             .await
         {
             Ok(rows) => Ok(User::from_rows(rows)),
+            Err(e) => Err(anyhow::Error::from(e)),
+        }
+    }
+}
+
+pub struct UserUpdateForm {
+    pub user_screen_name: Option<String>,
+    pub user_email: Option<String>,
+    pub user_password: Option<String>,
+    pub user_is_active: Option<bool>,
+}
+
+impl UserUpdateForm {
+    pub async fn update_db(
+        &self,
+        conn: &Transaction<'_>,
+        user_id: Uuid,
+    ) -> anyhow::Result<Option<User>> {
+        let set_clauses: Vec<_> = [
+            self.user_screen_name
+                .as_ref()
+                .map(|_| "user_screen_name = $1"),
+            self.user_email.as_ref().map(|_| "user_email = $2"),
+            self.user_password
+                .as_ref()
+                .map(|_| "user_password_hash = $3"),
+            self.user_is_active.map(|_| "user_is_active = $4"),
+        ]
+        .iter()
+        .filter_map(|&x| x)
+        .collect();
+
+        if set_clauses.is_empty() {
+            return Ok(None); // Nothing to update
+        }
+
+        let set_clause = set_clauses.join(", ");
+
+        let query = format!(
+            "UPDATE v1.users SET {}, user_updated_at = NOW() WHERE user_id = $5 RETURNING *",
+            set_clause
+        );
+
+        let result = conn
+            .query_opt(
+                &query,
+                &[
+                    &self.user_screen_name,
+                    &self.user_email,
+                    &self.user_password.as_ref().map(|pwd| hash_password(pwd)),
+                    &self.user_is_active,
+                    &user_id,
+                ],
+            )
+            .await;
+
+        match result {
+            Ok(opt_row) => Ok(opt_row.map(User::from_row)),
             Err(e) => Err(anyhow::Error::from(e)),
         }
     }
