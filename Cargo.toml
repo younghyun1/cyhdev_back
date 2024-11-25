@@ -1,0 +1,52 @@
+[package]
+name = "cyhdev_com_back"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+debug = false
+incremental = false
+strip = true
+lto = true
+panic = "unwind"
+
+[dependencies]
+# web framework
+axum = { version = "0.7.9", default-features = false, features = [
+    "form",
+    "http2",
+    "json",
+    "matched-path",
+    "original-uri",
+    "query",
+    "tokio",
+    "tower-log",
+    "tracing",
+    "macros",
+    # "ws",
+    # "multipart",
+] } #is the web framework
+axum-server = { version = "0.7.1", features = ["tls-rustls"] }
+
+# async
+tokio = { version = "1.41.1", features = ["macros", "rt-multi-thread", "time"] }
+
+# error handling
+anyhow = "1.0.93"
+
+# time
+chrono = { version = "0.4.38", features = ["serde"] }
+chrono-tz = "0.10.0"
+
+# logging
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+
+# env variabes loading
+dotenvy = "0.15.7"
+regex = "1.11.1"
+
+# crypto
+rustls = "0.23.18"

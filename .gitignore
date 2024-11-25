@@ -1,0 +1,54 @@
+# Compiled files and executables
+debug/
+target/
+/debug
+/target
+keys
+/keys
+
+# Logs
+logs
+/logs
+
+# Keys and server initialization functions
+src/server_init_funcs/keys
+/src/server_init_funcs/keys
+
+# Cargo.lock for libraries
+Cargo.lock
+
+# Rustfmt backups
+**/*.rs.bk
+
+# MSVC Windows debug info
+*.pdb
+
+# Executables/libraries
+*.exe
+*.o
+*.bin
+*.dll
+*.lib
+
+# Non-code data
+*.txt
+*.log
+
+# Shell scripts
+#*.sh
+*.ps1
+*.bat
+
+# Mac
+*.DS_Store
+
+# Environment variables
+.env
+*.env
+
+# Keys
+*.pem
+
+# Third-party
+yt-dlp
+ffmpeg
