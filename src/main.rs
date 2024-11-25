@@ -1,4 +1,7 @@
-pub mod models {}
+pub mod models {
+    pub mod common_traits;
+    pub mod users;
+}
 pub mod controllers {
     pub mod middleware {
         pub mod request_response_info;
@@ -7,6 +10,7 @@ pub mod controllers {
 }
 pub mod utils {
     pub mod gadgets {
+        pub mod argon;
         pub mod regex;
         pub mod stopwatch;
     }
