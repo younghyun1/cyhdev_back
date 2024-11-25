@@ -225,3 +225,21 @@ impl UserUpdateForm {
         }
     }
 }
+
+impl User {
+    pub async fn delete_by_id(conn: &Transaction<'_>, user_id: Uuid) -> anyhow::Result<u64> {
+        let query = "DELETE FROM v1.users WHERE user_id = $1";
+        let result = conn.execute(query, &[&user_id]).await;
+
+        match result {
+            Ok(count) => {
+                if count == 0 {
+                    Err(anyhow::Error::msg("Delete operation failed: No matching user found."))
+                } else {
+                    Ok(count)
+                }
+            }
+            Err(e) => Err(anyhow::Error::from(e)),
+        }
+    }
+}
