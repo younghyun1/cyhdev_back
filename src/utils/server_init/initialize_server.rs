@@ -61,6 +61,6 @@ pub async fn init_server(
             return Err(anyhow!("Axum could not serve app: {:?}", e));
         }
     };
-
+ 
     Ok(())
 }
