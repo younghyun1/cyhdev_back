@@ -1,3 +1,10 @@
+pub mod models {}
+pub mod controllers {
+    pub mod middleware {
+        pub mod request_response_info;
+    }
+    pub mod router;
+}
 pub mod utils {
     pub mod gadgets {
         pub mod regex;
@@ -8,7 +15,9 @@ pub mod utils {
         pub mod server_init_funcs {
             pub mod https_redirector;
             pub mod initialize_crypto;
+            pub mod initialize_db_conn_pool;
             pub mod initialize_logger;
+            pub mod initialize_mailer;
             pub mod load_cert_config;
             pub mod load_env_vars;
         }

@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 
-use crate::utils::gadgets::stopwatch::Stopwatch;
+use crate::{controllers::router::generate_router, utils::gadgets::stopwatch::Stopwatch};
 
 use super::{
     server_init_funcs::{
@@ -25,8 +28,39 @@ pub async fn init_server(
     stopwatch.click("HTTPS redirection server online.");
 
     // initialize server state
-    let state = ServerState::new(&mut stopwatch, server_start_time)?;
+    let state = Arc::new(ServerState::new(&mut stopwatch, server_start_time)?);
     stopwatch.click("server state initialized");
+
+    // test connection pool
+    let conn = state.get_conn().await?;
+    stopwatch.click("connection allocated from pool");
+
+    // validate DB connection and protocol
+    let ver_string = conn
+        .query_one("SELECT VERSION();", &[])
+        .await
+        .map_err(|e| anyhow!("failed to execute test query on the database: {:?}", e))?
+        .get::<usize, String>(0);
+    drop(conn);
+    stopwatch.click(&format!("DB connection verified: {}; latency", ver_string));
+    drop(ver_string);
+
+    // define router
+    let router = generate_router(&state);
+    stopwatch.click("routers defined");
+
+    stopwatch.total("server started in");
+
+    // serve server
+    match axum_server::bind_rustls(state.get_socket_addr(), cert_config)
+        .serve(router.into_make_service())
+        .await
+    {
+        Ok(_) => (),
+        Err(e) => {
+            return Err(anyhow!("Axum could not serve app: {:?}", e));
+        }
+    };
 
     Ok(())
 }
