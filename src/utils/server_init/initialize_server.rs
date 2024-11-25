@@ -14,7 +14,7 @@ use super::{
 };
 
 pub async fn init_server(
-    mut stopwatch: &mut Stopwatch,
+    stopwatch: &mut Stopwatch,
     server_start_time: DateTime<Utc>,
 ) -> anyhow::Result<()> {
     // initialize crypto
