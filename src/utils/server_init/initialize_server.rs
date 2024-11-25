@@ -46,7 +46,7 @@ pub async fn init_server(
     drop(ver_string);
 
     // define router
-    let router = generate_router(&state).await;
+    let router = generate_router(&state);
     stopwatch.click("routers defined");
 
     stopwatch.total("server started in");
