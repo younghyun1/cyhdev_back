@@ -25,7 +25,7 @@ impl ServerState {
     pub fn new(stopwatch: &mut Stopwatch, server_start_time: DateTime<Utc>) -> Result<Self> {
         Ok(ServerState {
             cache: Cache::new()?,
-            server_resources: ServerResources::new(stopwatch, server_start_time)?,
+            server_resources: ServerResources::new(server_start_time)?,
         })
     }
 }
@@ -89,10 +89,7 @@ pub struct ServerResources {
 }
 
 impl ServerResources {
-    pub fn new(
-        stopwatch: &mut Stopwatch,
-        server_start_time: DateTime<Utc>,
-    ) -> anyhow::Result<Self> {
+    pub fn new(server_start_time: DateTime<Utc>) -> anyhow::Result<Self> {
         Ok(ServerResources {
             server_config: ServerConfig::new()?,
             regexes: CompiledRegexes::compile()?,
