@@ -28,7 +28,7 @@ pub async fn init_server(
     stopwatch.click("HTTPS redirection server online.");
 
     // initialize server state
-    let state = Arc::new(ServerState::new(&mut stopwatch, server_start_time)?);
+    let state = Arc::new(ServerState::new(stopwatch, server_start_time)?);
     stopwatch.click("server state initialized");
 
     // test connection pool

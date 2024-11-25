@@ -14,7 +14,7 @@ impl Stopwatch {
     where
         T: Display + AsRef<str> + ?Sized,
     {
-        if message.as_ref().len() != 0 {
+        if !message.as_ref().is_empty() {
             println!(
                 "{}  INFO {}: {}",
                 chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, true),

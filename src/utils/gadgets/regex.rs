@@ -1,9 +1,9 @@
 use regex::Regex;
 
-pub const EMAIL_VALIDATION_REGEX: &'static str = r"^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-z0-9]+([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]+([a-z0-9-]*[a-z0-9])?)+$";
+pub const EMAIL_VALIDATION_REGEX: &str = r"^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-z0-9]+([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]+([a-z0-9-]*[a-z0-9])?)+$";
 
 pub fn compile_regex(regex: &'static str) -> anyhow::Result<Regex> {
-    Regex::new(regex).map_err(|e| anyhow::Error::from(e))
+    Regex::new(regex).map_err(anyhow::Error::from)
 }
 
 #[cfg(test)]

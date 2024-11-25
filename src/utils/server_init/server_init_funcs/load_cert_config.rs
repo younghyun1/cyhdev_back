@@ -14,7 +14,7 @@ pub async fn load_certs() -> Result<RustlsConfig> {
     {
         Ok(cfg) => Ok(cfg),
         Err(e) => {
-            return Err(anyhow!("Failed to load .pem keys: {:?}", e));
+            Err(anyhow!("Failed to load .pem keys: {:?}", e))
         }
     }
 }

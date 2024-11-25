@@ -125,7 +125,7 @@ pub struct CompiledRegexes {
 impl CompiledRegexes {
     fn compile() -> anyhow::Result<Self> {
         Ok(CompiledRegexes {
-            email_validation_regex: compile_regex(&EMAIL_VALIDATION_REGEX)?,
+            email_validation_regex: compile_regex(EMAIL_VALIDATION_REGEX)?,
         })
     }
 }
