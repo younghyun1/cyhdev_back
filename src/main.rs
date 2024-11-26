@@ -10,6 +10,7 @@ pub mod controllers {
     pub mod auth {
         pub mod signup;
     }
+    pub mod macros;
     pub mod router;
 }
 pub mod utils {

@@ -153,8 +153,7 @@ impl UserTokenUpdateForm {
 
         let query = format!(
             "UPDATE v1.user_tokens SET {} WHERE user_token_id = ${} RETURNING *",
-            set_clause,
-            idx
+            set_clause, idx
         );
         params.push(&user_token_id);
 
@@ -166,3 +165,5 @@ impl UserTokenUpdateForm {
         }
     }
 }
+
+pub const SIGNUP_EMAIL_VALIDATE: &str = "SIGNUP_EMAIL_VALIDATE";
