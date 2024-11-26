@@ -1,43 +1,61 @@
 use axum::response::IntoResponse;
-use chrono::{DateTime, Utc};
-use reqwest::StatusCode;
-use serde_derive::Serialize;
+use bitcode::Encode;
+use chrono::Utc;
 
-#[derive(Serialize, Clone, Debug)]
-pub struct ErrorResponse {
+use crate::utils::gadgets::stopwatch::Stopwatch;
+
+#[derive(Encode, Clone, Debug)]
+pub struct SvrErrorResponse {
     success: bool,
-    data: ErrorResponseData,
-    meta: ErrorResponseMeta,
+    data: SvrErrorRespData,
+    meta: SvrErrorRespMeta,
 }
 
-#[derive(Serialize, Clone, Debug)]
-pub struct ErrorResponseData {
+#[derive(Encode, Clone, Debug)]
+pub struct SvrErrorRespData {
     code: u8,
     message: &'static str,
     status_code: u16,
 }
 
-#[derive(Serialize, Clone, Debug)]
-pub struct ErrorResponseMeta {
+#[derive(Encode, Clone, Debug)]
+pub struct SvrErrorRespMeta {
     time_taken: String,
-    timestamp: DateTime<Utc>,
+    timestamp: String,
 }
 
-impl IntoResponse for ErrorResponse {
+impl IntoResponse for SvrErrorResponse {
     fn into_response(self) -> axum::response::Response {
-        match bincode::serialize(&self) {
-            Ok(serialized_body) => {
-                let response = match axum::response::Response::builder()
-                    .status(self.data.status_code)
-                    .header("Content-Type", "application/octet-stream")
-                    .body(axum::body::Body::from(serialized_body))
-                {
-                    Ok(resp) => resp,
-                    Err(e) => panic!("Failed to serialize the response: {:?}", e),
-                };
-                response
-            }
+        let serialized_body = bitcode::encode(&self);
+        let response = match axum::response::Response::builder()
+            .status(self.data.status_code)
+            .header("Content-Type", "application/octet-stream")
+            .body(axum::body::Body::from(serialized_body))
+        {
+            Ok(resp) => resp,
             Err(e) => panic!("Failed to serialize the response: {:?}", e),
+        };
+        response
+    }
+}
+
+impl SvrErrorResponse {
+    pub fn from(dat: SvrErrorRespData, start: Stopwatch) -> Self {
+        SvrErrorResponse {
+            success: false,
+            data: dat,
+            meta: SvrErrorRespMeta {
+                time_taken: format!("{:?}", start.get_original_start().elapsed()),
+                timestamp: Utc::now().to_rfc3339(),
+            },
         }
     }
+}
+
+impl SvrErrorRespData {
+    pub const COULD_NOT_GET_CONN_FROM_POOL: SvrErrorRespData = SvrErrorRespData {
+        code: 1,
+        message: "Could not get connection from pool!",
+        status_code: 404,
+    };
 }
