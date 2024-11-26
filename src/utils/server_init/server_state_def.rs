@@ -16,6 +16,7 @@ use super::server_init_funcs::{
     load_env_vars::get_env_var,
 };
 
+#[derive(Clone)]
 pub struct ServerState {
     cache: Cache,
     server_resources: ServerResources,
@@ -70,6 +71,7 @@ impl ServerState {
     }
 }
 
+#[derive(Clone)]
 pub struct Cache {}
 
 impl Cache {
@@ -78,6 +80,7 @@ impl Cache {
     }
 }
 
+#[derive(Clone)]
 pub struct ServerResources {
     server_config: ServerConfig,
     regexes: CompiledRegexes,
@@ -102,6 +105,7 @@ impl ServerResources {
     }
 }
 
+#[derive(Clone)]
 pub struct ServerConfig {
     host_port: u16,
     host_addr: IpAddr,
@@ -118,6 +122,7 @@ impl ServerConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct CompiledRegexes {
     email_validation_regex: Regex,
 }

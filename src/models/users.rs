@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use deadpool_postgres::{Object, Transaction};
+use serde_derive::{Deserialize, Serialize};
 use tokio_postgres::types::Type;
 use uuid::Uuid;
 
@@ -7,6 +8,7 @@ use crate::utils::gadgets::argon::hash_password;
 
 use super::common_traits::{FromRow, FromRows, ToBatchInsertStmt, ToInsertStmt};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct User {
     user_id: uuid::Uuid,                   // User's PKEY.
     user_screen_name: String,              // User's screen name. Unique.
@@ -64,6 +66,7 @@ impl User {
     }
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct UserForm {
     pub user_screen_name: String,
     pub user_email: String,
@@ -168,6 +171,7 @@ impl UserForm {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct UserUpdateForm {
     pub user_screen_name: Option<String>,
     pub user_email: Option<String>,
@@ -234,7 +238,9 @@ impl User {
         match result {
             Ok(count) => {
                 if count == 0 {
-                    Err(anyhow::Error::msg("Delete operation failed: No matching user found."))
+                    Err(anyhow::Error::msg(
+                        "Delete operation failed: No matching user found.",
+                    ))
                 } else {
                     Ok(count)
                 }

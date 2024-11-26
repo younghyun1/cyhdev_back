@@ -1,14 +1,22 @@
 pub mod models {
     pub mod common_traits;
+    pub mod user_tokens;
     pub mod users;
 }
 pub mod controllers {
     pub mod middleware {
         pub mod request_response_info;
     }
+    pub mod auth {
+        pub mod signup;
+    }
     pub mod router;
 }
 pub mod utils {
+    pub mod errors {
+
+        pub mod errors;
+    }
     pub mod gadgets {
         pub mod argon;
         pub mod regex;
