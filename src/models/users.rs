@@ -64,6 +64,14 @@ impl User {
             .await?;
         Ok(User::from_rows(rows))
     }
+
+    pub fn get_id(&self) -> Uuid {
+        self.user_id
+    }
+
+    pub fn get_created_at(&self) -> DateTime<Utc> {
+        self.user_created_at
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

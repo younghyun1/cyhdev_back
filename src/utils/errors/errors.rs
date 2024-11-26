@@ -94,4 +94,9 @@ impl ErrRespDat {
         message: "Could not insert user into database; ",
         status_code: 500, // INTERNAL SERVER ERROR
     };
+    pub const COULD_NOT_INSERT_USER_TOKEN: ErrRespDat = ErrRespDat {
+        code: 6,
+        message: "Could not insert user token into database; ",
+        status_code: 500, // INTERNAL SERVER ERROR
+    };
 }

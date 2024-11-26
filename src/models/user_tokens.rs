@@ -8,7 +8,7 @@ pub struct UserToken {
     user_token_id: Uuid,                  // Token's primary key.
     user_token_user_id: Uuid,             // Reference to the user this token belongs to.
     user_token_type: String,              // The type of the token, indicating its purpose.
-    user_token_value: String,             // The secure, unique value of the token.
+    user_token_value: Uuid,               // The secure, unique value of the token.
     user_token_created_at: DateTime<Utc>, // The time when the token was generated.
     user_token_expires_at: DateTime<Utc>, // The time when the token will expire and become invalid.
     user_token_used: bool,                // Indicates whether the token has been used or redeemed.
@@ -20,7 +20,7 @@ impl FromRow for UserToken {
             user_token_id: row.get::<&str, Uuid>("user_token_id"),
             user_token_user_id: row.get::<&str, Uuid>("user_token_user_id"),
             user_token_type: row.get::<&str, String>("user_token_type"),
-            user_token_value: row.get::<&str, String>("user_token_value"),
+            user_token_value: row.get::<&str, Uuid>("user_token_value"),
             user_token_created_at: row.get::<&str, DateTime<Utc>>("user_token_created_at"),
             user_token_expires_at: row.get::<&str, DateTime<Utc>>("user_token_expires_at"),
             user_token_used: row.get::<&str, bool>("user_token_used"),
@@ -71,7 +71,7 @@ impl UserToken {
 pub struct UserTokenForm {
     pub user_token_user_id: Uuid,
     pub user_token_type: String,
-    pub user_token_value: String,
+    pub user_token_value: Uuid,
     pub user_token_expires_at: DateTime<Utc>,
 }
 
