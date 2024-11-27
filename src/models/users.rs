@@ -21,6 +21,35 @@ pub struct User {
     user_email_verified: bool,             // User's email verified status.
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserTruncated {
+    user_id: uuid::Uuid,                   // User's PKEY.
+    user_screen_name: String,              // User's screen name. Unique.
+    user_email: String,                    // User's email. Server-side checked, unique.
+    user_created_at: DateTime<Utc>,        // User's creation time.
+}
+
+impl UserTruncated {
+    pub fn get_id(&self) -> Uuid {
+        self.user_id
+    }
+
+    pub fn get_created_at(&self) -> DateTime<Utc> {
+        self.user_created_at
+    }
+}
+
+impl From<User> for UserTruncated {
+    fn from(user: User) -> Self {
+        UserTruncated {
+            user_id: user.user_id,
+            user_screen_name: user.user_screen_name,
+            user_email: user.user_email,
+            user_created_at: user.user_created_at,
+        }
+    }
+}
+
 impl FromRow for User {
     fn from_row(row: tokio_postgres::Row) -> User {
         User {

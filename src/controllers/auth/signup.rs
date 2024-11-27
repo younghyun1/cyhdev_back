@@ -13,7 +13,7 @@ use crate::{
     models::{
         consts::SMTP_EMAIL,
         user_tokens::{UserToken, UserTokenForm, SIGNUP_EMAIL_VALIDATE},
-        users::{User, UserForm},
+        users::{User, UserForm, UserTruncated},
     },
     utils::{
         errors::errors::{ErrResp, ErrRespDat},
@@ -63,15 +63,17 @@ pub async fn signup(
         },
     };
 
+    let user: UserTruncated = UserTruncated::from(returned_user);
+
     // new token's PKEY (email_validation)
     let user_token_id: uuid::Uuid = Uuid::new_v4();
 
     // new token insertion form (email_validation)
     let user_token_form = UserTokenForm {
-        user_token_user_id: returned_user.get_id(),
+        user_token_user_id: user.get_id(),
         user_token_type: SIGNUP_EMAIL_VALIDATE.to_owned(),
         user_token_value: user_token_id,
-        user_token_expires_at: returned_user.get_created_at() + chrono::Duration::days(1),
+        user_token_expires_at: user.get_created_at() + chrono::Duration::days(1),
     };
 
     // insert into DB and get token (email_validation)
@@ -87,12 +89,14 @@ pub async fn signup(
         }
     };
 
+    let returned_token_id = returned_token.get_id();
+    drop(returned_token);
+
     match transaction.commit().await {
         Ok(_) => {
             tokio::spawn({
                 let state = Arc::clone(&state);
                 let body_user_email = body.user_email.clone();
-                let returned_token_id = returned_token.get_id();
                 async move {
                     let email: Message = match Message::builder()
                         .from(SMTP_EMAIL.parse().unwrap())
@@ -124,7 +128,7 @@ pub async fn signup(
                 }
             });
 
-            let encoded_user = match bincode::serialize(&returned_user) {
+            let encoded_user = match bincode::serialize(&user) {
                 Ok(encoded) => encoded,
                 Err(e) => {
                     return ErrResp::from(
