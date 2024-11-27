@@ -1,9 +1,11 @@
 use chrono::{DateTime, Utc};
 use deadpool_postgres::{Object, Transaction};
+use serde_derive::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::common_traits::{FromRow, FromRows, ToInsertStmt};
 
+#[derive(Serialize, Deserialize)]
 pub struct UserToken {
     user_token_id: Uuid,                  // Token's primary key.
     user_token_user_id: Uuid,             // Reference to the user this token belongs to.
@@ -66,8 +68,13 @@ impl UserToken {
             Err(e) => Err(anyhow::Error::from(e)),
         }
     }
+
+    pub fn get_id(&self) -> Uuid {
+        self.user_token_id
+    }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct UserTokenForm {
     pub user_token_user_id: Uuid,
     pub user_token_type: String,

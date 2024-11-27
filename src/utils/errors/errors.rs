@@ -1,31 +1,31 @@
 use axum::response::IntoResponse;
-use bitcode::Encode;
 use chrono::Utc;
+use serde_derive::{Deserialize, Serialize};
 
 use crate::utils::gadgets::stopwatch::Stopwatch;
 
-#[derive(Encode, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ErrResp {
     success: bool,
     data: ErrRespDatFin,
     meta: SvrErrorRespMeta,
 }
 
-#[derive(Encode, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ErrRespDat {
     code: u8,
     message: &'static str,
     status_code: u16,
 }
 
-#[derive(Encode, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ErrRespDatFin {
     code: u8,
     message: String,
     status_code: u16,
 }
 
-#[derive(Encode, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SvrErrorRespMeta {
     time_taken: String,
     timestamp: String,
@@ -33,7 +33,8 @@ pub struct SvrErrorRespMeta {
 
 impl IntoResponse for ErrResp {
     fn into_response(self) -> axum::response::Response {
-        let serialized_body = bitcode::encode(&self);
+        let serialized_body =
+            bincode::serialize(&self).expect("Failed to serialize ErrResp with bincode");
         let response = match axum::response::Response::builder()
             .status(self.data.status_code)
             .header("Content-Type", "application/octet-stream")
@@ -97,6 +98,21 @@ impl ErrRespDat {
     pub const COULD_NOT_INSERT_USER_TOKEN: ErrRespDat = ErrRespDat {
         code: 6,
         message: "Could not insert user token into database; ",
+        status_code: 500, // INTERNAL SERVER ERROR
+    };
+    pub const COULD_NOT_CONSTRUCT_EMAIL: ErrRespDat = ErrRespDat {
+        code: 7,
+        message: "Could not construct email content; ",
+        status_code: 500, // INTERNAL SERVER ERROR
+    };
+    pub const COULD_NOT_SEND_MAIL: ErrRespDat = ErrRespDat {
+        code: 8,
+        message: "Could not send email; ",
+        status_code: 500, // INTERNAL SERVER ERROR
+    };
+    pub const COULD_NOT_SERIALIZE_BINCODE: ErrRespDat = ErrRespDat {
+        code: 9,
+        message: "Failed to serialize data with bincode; ",
         status_code: 500, // INTERNAL SERVER ERROR
     };
 }

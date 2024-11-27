@@ -2,7 +2,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4, SocketAddrV6};
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::{Object, Pool, Transaction};
+use deadpool_postgres::{Object, Pool};
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use regex::Regex;
 

@@ -1,5 +1,6 @@
 pub mod models {
     pub mod common_traits;
+    pub mod consts;
     pub mod jwt;
     pub mod user_tokens;
     pub mod users;

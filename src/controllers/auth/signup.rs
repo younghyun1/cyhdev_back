@@ -1,18 +1,21 @@
 use std::sync::Arc;
 
 use anyhow::anyhow;
-use axum::{debug_handler, extract::State, response::IntoResponse, Json};
+use axum::{extract::State, response::IntoResponse, Json};
+use lettre::{AsyncTransport, Message};
+use reqwest::StatusCode;
 use uuid::Uuid;
 
 use crate::{
     get_conn, get_transaction,
     models::{
-        user_tokens::{UserTokenForm, SIGNUP_EMAIL_VALIDATE},
+        consts::SMTP_EMAIL,
+        user_tokens::{UserToken, UserTokenForm, SIGNUP_EMAIL_VALIDATE},
         users::{User, UserForm},
     },
     utils::{
         errors::errors::{ErrResp, ErrRespDat},
-        gadgets::stopwatch::{self, Stopwatch},
+        gadgets::stopwatch::Stopwatch,
         server_init::server_state_def::ServerState,
     },
 };
@@ -60,7 +63,7 @@ pub async fn signup(
     };
 
     // insert into DB and get token (email_validation)
-    let returned_token = match user_token_form.insert(&transaction).await {
+    let returned_token: UserToken = match user_token_form.insert(&transaction).await {
         Ok(token) => token,
         Err(e) => {
             return ErrResp::from(
@@ -72,5 +75,48 @@ pub async fn signup(
         }
     };
 
-    todo!()
+    let email: Message = match Message::builder()
+        .from(SMTP_EMAIL.parse().unwrap())
+        .to(body.user_email.parse().unwrap())
+        .subject("Email Verification for cyhdev.com forums!")
+        .body(format!(
+            "Please verify your email by clicking on the following link: https://www.cyhdev.com/auth/verify_email?email_token={}",
+            returned_token.get_id()
+        )) {
+            Ok(email) => email,
+            Err(e) => {
+                return ErrResp::from(
+                    ErrRespDat::COULD_NOT_CONSTRUCT_EMAIL,
+                    &stopwatch,
+                    anyhow!(e)
+                ).into_response()
+            },
+        };
+
+    match state.get_mailer().send(email).await {
+        Ok(_) => (),
+        Err(e) => {
+            return ErrResp::from(ErrRespDat::COULD_NOT_SEND_MAIL, &stopwatch, anyhow!(e))
+                .into_response()
+        }
+    };
+
+    let encoded_user = match bincode::serialize(&returned_user) {
+        Ok(encoded) => encoded,
+        Err(e) => {
+            return ErrResp::from(
+                ErrRespDat::COULD_NOT_SERIALIZE_BINCODE,
+                &stopwatch,
+                anyhow!(e),
+            )
+            .into_response()
+        }
+    };
+
+    return (
+        StatusCode::CREATED,
+        [("Content-Type", "application/octet-stream")],
+        encoded_user,
+    )
+        .into_response();
 }
