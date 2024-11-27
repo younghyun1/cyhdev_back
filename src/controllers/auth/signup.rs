@@ -45,7 +45,7 @@ pub async fn signup(
     let transaction = get_transaction!(conn, &stopwatch);
 
     // insert new user into DB
-    let returned_user: User = match body.insert(&transaction).await {
+    let returned_user: UserTruncated = match body.insert(&transaction).await {
         Ok(user) => user,
         Err(e) => match *e.as_db_error().unwrap().code() {
             SqlState::UNIQUE_VIOLATION => {
@@ -63,17 +63,15 @@ pub async fn signup(
         },
     };
 
-    let user: UserTruncated = UserTruncated::from(returned_user);
-
     // new token's PKEY (email_validation)
     let user_token_id: uuid::Uuid = Uuid::new_v4();
 
     // new token insertion form (email_validation)
     let user_token_form = UserTokenForm {
-        user_token_user_id: user.get_id(),
+        user_token_user_id: returned_user.get_id(),
         user_token_type: SIGNUP_EMAIL_VALIDATE.to_owned(),
         user_token_value: user_token_id,
-        user_token_expires_at: user.get_created_at() + chrono::Duration::days(1),
+        user_token_expires_at: returned_user.get_created_at() + chrono::Duration::days(1),
     };
 
     // insert into DB and get token (email_validation)
@@ -128,7 +126,7 @@ pub async fn signup(
                 }
             });
 
-            let encoded_user = match bincode::serialize(&user) {
+            let encoded_user = match bincode::serialize(&returned_user) {
                 Ok(encoded) => encoded,
                 Err(e) => {
                     return ErrResp::from(

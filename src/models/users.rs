@@ -21,35 +21,6 @@ pub struct User {
     user_email_verified: bool,             // User's email verified status.
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct UserTruncated {
-    user_id: uuid::Uuid,                   // User's PKEY.
-    user_screen_name: String,              // User's screen name. Unique.
-    user_email: String,                    // User's email. Server-side checked, unique.
-    user_created_at: DateTime<Utc>,        // User's creation time.
-}
-
-impl UserTruncated {
-    pub fn get_id(&self) -> Uuid {
-        self.user_id
-    }
-
-    pub fn get_created_at(&self) -> DateTime<Utc> {
-        self.user_created_at
-    }
-}
-
-impl From<User> for UserTruncated {
-    fn from(user: User) -> Self {
-        UserTruncated {
-            user_id: user.user_id,
-            user_screen_name: user.user_screen_name,
-            user_email: user.user_email,
-            user_created_at: user.user_created_at,
-        }
-    }
-}
-
 impl FromRow for User {
     fn from_row(row: tokio_postgres::Row) -> User {
         User {
@@ -103,6 +74,46 @@ impl User {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserTruncated {
+    user_id: uuid::Uuid,            // User's PKEY.
+    user_screen_name: String,       // User's screen name. Unique.
+    user_email: String,             // User's email. Server-side checked, unique.
+    user_created_at: DateTime<Utc>, // User's creation time.
+}
+
+impl FromRow for UserTruncated {
+    fn from_row(row: tokio_postgres::Row) -> UserTruncated {
+        UserTruncated {
+            user_id: row.get::<&str, uuid::Uuid>("user_id"),
+            user_screen_name: row.get::<&str, String>("user_screen_name"),
+            user_email: row.get::<&str, String>("user_email"),
+            user_created_at: row.get::<&str, DateTime<Utc>>("user_created_at"),
+        }
+    }
+}
+
+impl UserTruncated {
+    pub fn get_id(&self) -> Uuid {
+        self.user_id
+    }
+
+    pub fn get_created_at(&self) -> DateTime<Utc> {
+        self.user_created_at
+    }
+}
+
+impl From<User> for UserTruncated {
+    fn from(user: User) -> Self {
+        UserTruncated {
+            user_id: user.user_id,
+            user_screen_name: user.user_screen_name,
+            user_email: user.user_email,
+            user_created_at: user.user_created_at,
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct UserForm {
     pub user_screen_name: String,
@@ -112,7 +123,7 @@ pub struct UserForm {
 
 impl ToInsertStmt for UserForm {
     fn to_insert_stmt() -> String {
-        String::from("INSERT INTO v1.users (user_screen_name, user_email, user_password_hash, user_created_at, user_recorded_to_db_at, user_updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *")
+        String::from("INSERT INTO v1.users (user_screen_name, user_email, user_password_hash, user_created_at, user_recorded_to_db_at, user_updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING user_id, user_screen_name, user_email, user_created_at")
     }
 }
 
@@ -144,7 +155,10 @@ impl ToBatchInsertStmt for UserForm {
 }
 
 impl UserForm {
-    pub async fn insert(&self, conn: &Transaction<'_>) -> Result<User, tokio_postgres::Error> {
+    pub async fn insert(
+        &self,
+        conn: &Transaction<'_>,
+    ) -> Result<UserTruncated, tokio_postgres::Error> {
         let now = Utc::now();
         match conn
             .query_one(
@@ -160,7 +174,7 @@ impl UserForm {
             )
             .await
         {
-            Ok(row) => Ok(User::from_row(row)),
+            Ok(row) => Ok(UserTruncated::from_row(row)),
             Err(e) => Err(e),
         }
     }
