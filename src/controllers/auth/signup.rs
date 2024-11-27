@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use axum::{extract::State, response::IntoResponse, Json};
-use lettre::{AsyncTransport, Message};
+use lettre::{message::Mailbox, AsyncTransport, Message};
 use reqwest::StatusCode;
 use uuid::Uuid;
 
@@ -77,7 +77,16 @@ pub async fn signup(
 
     let email: Message = match Message::builder()
         .from(SMTP_EMAIL.parse().unwrap())
-        .to(body.user_email.parse().unwrap())
+        .to(match body.user_email.parse::<Mailbox>() {
+            Ok(mb) => mb,
+            Err(e) => {
+                return ErrResp::from(
+                    ErrRespDat::WRONG_EMAIL_FORMAT,
+                    &stopwatch,
+                    anyhow!(e)
+                ).into_response();
+            },
+        })
         .subject("Email Verification for cyhdev.com forums!")
         .body(format!(
             "Please verify your email by clicking on the following link: https://www.cyhdev.com/auth/verify_email?email_token={}",

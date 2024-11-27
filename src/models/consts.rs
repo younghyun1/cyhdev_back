@@ -1,1 +1,1 @@
-pub const SMTP_EMAIL: &str = "";
+pub const SMTP_EMAIL: &str = "noreply@cyhdev.com";
