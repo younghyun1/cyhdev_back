@@ -7,7 +7,7 @@ use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use regex::Regex;
 
 use crate::utils::gadgets::{
-    regex::{compile_regex, EMAIL_VALIDATION_REGEX, PASSWORD_VALIDATION_REGEX},
+    regex::{compile_regex, EMAIL_VALIDATION_REGEX},
     stopwatch::Stopwatch,
 };
 
@@ -34,10 +34,6 @@ impl ServerState {
 impl ServerState {
     pub fn email_regex(&self) -> &Regex {
         &self.server_resources.regexes.email_validation_regex
-    }
-
-    pub fn pw_regex(&self) -> &Regex {
-        &self.server_resources.regexes.password_validation_regex
     }
 
     pub fn get_name(&self) -> String {
@@ -129,14 +125,12 @@ impl ServerConfig {
 #[derive(Clone)]
 pub struct CompiledRegexes {
     email_validation_regex: Regex,
-    password_validation_regex: Regex,
 }
 
 impl CompiledRegexes {
     fn compile() -> anyhow::Result<Self> {
         Ok(CompiledRegexes {
             email_validation_regex: compile_regex(EMAIL_VALIDATION_REGEX)?,
-            password_validation_regex: compile_regex(PASSWORD_VALIDATION_REGEX)?,
         })
     }
 }

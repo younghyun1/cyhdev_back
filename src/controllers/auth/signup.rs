@@ -15,7 +15,7 @@ use crate::{
     },
     utils::{
         errors::errors::{ErrResp, ErrRespDat},
-        gadgets::stopwatch::Stopwatch,
+        gadgets::{regex::pw_regex_custom, stopwatch::Stopwatch},
         server_init::server_state_def::ServerState,
     },
 };
@@ -34,7 +34,7 @@ pub async fn signup(
     }
 
     // check if password is valid form (At least 8 characters and includes uppercase, lowercase, number, and special characters among: [@, $, !, %, *, ?, &, #])
-    if !state.pw_regex().is_match(&body.user_password) {
+    if pw_regex_custom(&body.user_password) {
         return ErrResp::from(ErrRespDat::WRONG_PW_FORMAT, &stopwatch, anyhow!("")).into_response();
     }
 
