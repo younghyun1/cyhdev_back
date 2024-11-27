@@ -3,6 +3,7 @@ use std::fmt::Display;
 use tracing::info;
 
 /// data structure for holding init time (approximate) as well as interval measurement in async context
+#[derive(Clone)]
 pub struct Stopwatch {
     original_start: tokio::time::Instant,
     start: tokio::time::Instant,

@@ -115,4 +115,9 @@ impl ErrRespDat {
         message: "Failed to serialize data with bincode; ",
         status_code: 500, // INTERNAL SERVER ERROR
     };
+    pub const COULD_NOT_COMMIT_TRANSACTION: ErrRespDat = ErrRespDat {
+        code: 10,
+        message: "Could not commit transaction; ",
+        status_code: 500, // INTERNAL SERVER ERROR
+    };
 }

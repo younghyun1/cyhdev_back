@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use axum::{extract::State, response::IntoResponse, Json};
 use lettre::{message::Mailbox, AsyncTransport, Message};
 use reqwest::StatusCode;
+use tracing::error;
 use uuid::Uuid;
 
 use crate::{
@@ -75,57 +76,70 @@ pub async fn signup(
         }
     };
 
-    let email: Message = match Message::builder()
-        .from(SMTP_EMAIL.parse().unwrap())
-        .to(match body.user_email.parse::<Mailbox>() {
-            Ok(mb) => mb,
-            Err(e) => {
-                return ErrResp::from(
-                    ErrRespDat::WRONG_EMAIL_FORMAT,
-                    &stopwatch,
-                    anyhow!(e)
-                ).into_response();
-            },
-        })
-        .subject("Email Verification for cyhdev.com forums!")
-        .body(format!(
-            "Please verify your email by clicking on the following link: https://www.cyhdev.com/auth/verify_email?email_token={}",
-            returned_token.get_id()
-        )) {
-            Ok(email) => email,
-            Err(e) => {
-                return ErrResp::from(
-                    ErrRespDat::COULD_NOT_CONSTRUCT_EMAIL,
-                    &stopwatch,
-                    anyhow!(e)
-                ).into_response()
-            },
-        };
+    match transaction.commit().await {
+        Ok(_) => {
+            tokio::spawn({
+                let state = Arc::clone(&state);
+                let body_user_email = body.user_email.clone();
+                let returned_token_id = returned_token.get_id();
+                async move {
+                    let email: Message = match Message::builder()
+                        .from(SMTP_EMAIL.parse().unwrap())
+                        .to(match body_user_email.parse::<Mailbox>() {
+                            Ok(mb) => mb,
+                            Err(e) => {
+                                error!("Could not parse body email: {:?}", e);
+                                return;
+                            },
+                        })
+                        .subject("Email Verification for cyhdev.com forums!")
+                        .body(format!(
+                            "Please verify your email by clicking on the following link: https://www.cyhdev.com/auth/verify_email?email_token={}",
+                            returned_token_id
+                        )) {
+                            Ok(email) => email,
+                            Err(e) => {
+                                error!("Could not construct email: {:?}", e);
+                                return;
+                            },
+                        };
 
-    match state.get_mailer().send(email).await {
-        Ok(_) => (),
-        Err(e) => {
-            return ErrResp::from(ErrRespDat::COULD_NOT_SEND_MAIL, &stopwatch, anyhow!(e))
-                .into_response()
+                    match state.get_mailer().send(email).await {
+                        Ok(_) => (),
+                        Err(e) => {
+                            error!("Could not send mail: {:?}", e);
+                        }
+                    };
+                }
+            });
+
+            let encoded_user = match bincode::serialize(&returned_user) {
+                Ok(encoded) => encoded,
+                Err(e) => {
+                    return ErrResp::from(
+                        ErrRespDat::COULD_NOT_SERIALIZE_BINCODE,
+                        &stopwatch,
+                        anyhow!(e),
+                    )
+                    .into_response()
+                }
+            };
+
+            return (
+                StatusCode::CREATED,
+                [("Content-Type", "application/octet-stream")],
+                encoded_user,
+            )
+                .into_response();
         }
-    };
-
-    let encoded_user = match bincode::serialize(&returned_user) {
-        Ok(encoded) => encoded,
         Err(e) => {
+            error!("Could not commit transaction: {:?}", e);
             return ErrResp::from(
-                ErrRespDat::COULD_NOT_SERIALIZE_BINCODE,
+                ErrRespDat::COULD_NOT_COMMIT_TRANSACTION,
                 &stopwatch,
                 anyhow!(e),
             )
-            .into_response()
+            .into_response();
         }
     };
-
-    return (
-        StatusCode::CREATED,
-        [("Content-Type", "application/octet-stream")],
-        encoded_user,
-    )
-        .into_response();
 }
