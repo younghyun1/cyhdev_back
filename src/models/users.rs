@@ -115,7 +115,7 @@ impl ToBatchInsertStmt for UserForm {
 }
 
 impl UserForm {
-    pub async fn insert(&self, conn: &Transaction<'_>) -> anyhow::Result<User> {
+    pub async fn insert(&self, conn: &Transaction<'_>) -> Result<User, tokio_postgres::Error> {
         let now = Utc::now();
         match conn
             .query_one(
@@ -132,7 +132,7 @@ impl UserForm {
             .await
         {
             Ok(row) => Ok(User::from_row(row)),
-            Err(e) => Err(anyhow::Error::from(e)),
+            Err(e) => Err(e),
         }
     }
 

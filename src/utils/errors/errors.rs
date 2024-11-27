@@ -120,4 +120,9 @@ impl ErrRespDat {
         message: "Could not commit transaction; ",
         status_code: 500, // INTERNAL SERVER ERROR
     };
+    pub const USER_ALREADY_EXISTS: ErrRespDat = ErrRespDat {
+        code: 11,
+        message: "User already exists in the database; ",
+        status_code: 409, // CONFLICT
+    };
 }

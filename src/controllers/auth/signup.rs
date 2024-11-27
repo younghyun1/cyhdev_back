@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use axum::{extract::State, response::IntoResponse, Json};
 use lettre::{message::Mailbox, AsyncTransport, Message};
 use reqwest::StatusCode;
+use tokio_postgres::error::SqlState;
 use tracing::error;
 use uuid::Uuid;
 
@@ -46,10 +47,20 @@ pub async fn signup(
     // insert new user into DB
     let returned_user: User = match body.insert(&transaction).await {
         Ok(user) => user,
-        Err(e) => {
-            return ErrResp::from(ErrRespDat::COULD_NOT_INSERT_USER, &stopwatch, anyhow!(e))
-                .into_response()
-        }
+        Err(e) => match *e.as_db_error().unwrap().code() {
+            SqlState::UNIQUE_VIOLATION => {
+                return ErrResp::from(
+                    ErrRespDat::USER_ALREADY_EXISTS,
+                    &stopwatch,
+                    anyhow!("User already exists! Please use another email and screen name."),
+                )
+                .into_response();
+            }
+            _ => {
+                return ErrResp::from(ErrRespDat::COULD_NOT_INSERT_USER, &stopwatch, anyhow!(e))
+                    .into_response()
+            }
+        },
     };
 
     // new token's PKEY (email_validation)
