@@ -13,7 +13,7 @@ use crate::{
     models::{
         consts::SMTP_EMAIL,
         user_tokens::{UserToken, UserTokenForm, SIGNUP_EMAIL_VALIDATE},
-        users::{User, UserForm, UserTruncated},
+        users::{UserForm, UserTruncated},
     },
     utils::{
         errors::errors::{ErrResp, ErrRespDat},
@@ -21,6 +21,14 @@ use crate::{
         server_init::server_state_def::ServerState,
     },
 };
+
+// POST /auth/signup
+// Request body JSON for user signup
+// pub struct UserForm {
+//     pub user_screen_name: String,
+//     pub user_email: String,
+//     pub user_password: String,
+// }
 
 pub async fn signup(
     State(state): State<Arc<ServerState>>,
@@ -90,11 +98,15 @@ pub async fn signup(
     let returned_token_id = returned_token.get_id();
     drop(returned_token);
 
+    // commit transaction
     match transaction.commit().await {
         Ok(_) => {
             tokio::spawn({
+                // if successfully committed onto DB, then send email in separate thread
                 let state = Arc::clone(&state);
                 let body_user_email = body.user_email.clone();
+
+                // construct email
                 async move {
                     let email: Message = match Message::builder()
                         .from(SMTP_EMAIL.parse().unwrap())
@@ -117,6 +129,7 @@ pub async fn signup(
                             },
                         };
 
+                    // send email on shared email client
                     match state.get_mailer().send(email).await {
                         Ok(_) => (),
                         Err(e) => {
@@ -126,6 +139,7 @@ pub async fn signup(
                 }
             });
 
+            // serialize user w. truncated password hash for return
             let encoded_user = match bincode::serialize(&returned_user) {
                 Ok(encoded) => encoded,
                 Err(e) => {
@@ -138,6 +152,8 @@ pub async fn signup(
                 }
             };
 
+            // api response; deserialize with shared data definitions on rust front-end app using 'bincode'
+            // will be gzip compressed by middleware; expected 50%+ lighter than equivalent JSON and possibly more secure against dumber scrapers
             return (
                 StatusCode::CREATED,
                 [("Content-Type", "application/octet-stream")],

@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use axum::{middleware::from_fn, routing::get};
+use axum::{
+    middleware::from_fn,
+    routing::{get, post},
+};
 use tower_http::compression::CompressionLayer;
 
 use crate::utils::server_init::server_state_def::ServerState;
@@ -9,7 +12,7 @@ use super::{auth::signup::signup, middleware::request_response_info::print_reque
 
 pub fn generate_router(state: &Arc<ServerState>) -> axum::Router {
     axum::Router::new()
-        .route("/auth/signup", get(signup))
+        .route("/auth/signup", post(signup))
         .layer(CompressionLayer::new())
         .layer(from_fn(print_request_info))
         .with_state(Arc::clone(state))

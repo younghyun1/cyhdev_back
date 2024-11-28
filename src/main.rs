@@ -11,6 +11,7 @@ pub mod controllers {
     }
     pub mod auth {
         pub mod signup;
+        pub mod verify_email;
     }
     pub mod macros;
     pub mod router;
