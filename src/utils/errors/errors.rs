@@ -125,4 +125,19 @@ impl ErrRespDat {
         message: "User already exists in the database; ",
         status_code: 409, // CONFLICT
     };
+    pub const USER_TOKEN_INVALID: ErrRespDat = ErrRespDat {
+        code: 12,
+        message: "The provided user token is invalid; ",
+        status_code: 401, // UNAUTHORIZED
+    };
+    pub const USER_TOKEN_USED: ErrRespDat = ErrRespDat {
+        code: 13,
+        message: "The provided user token has already been used; ",
+        status_code: 403, // FORBIDDEN
+    };
+    pub const USER_TOKEN_EXPIRED: ErrRespDat = ErrRespDat {
+        code: 14,
+        message: "The provided user token has expired; ",
+        status_code: 401, // UNAUTHORIZED
+    };
 }

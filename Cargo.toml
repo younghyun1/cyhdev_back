@@ -39,10 +39,10 @@ tower-http = { version = "0.6.2", features = [
 
 
 # async
-tokio = { version = "1.41.1", features = ["macros", "rt-multi-thread", "time"] }
+tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread", "time"] }
 
 # error handling
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 
 # time
 chrono = { version = "0.4.38", features = ["serde"] }
@@ -78,7 +78,7 @@ reqwest = { version = "0.12.9", default-features = false, features = [
 ] } #sends requests
 
 # email
-lettre = { version = "0.11.10", default-features = false, features = [
+lettre = { version = "0.11.11", default-features = false, features = [
     "builder",
     "hostname",
     "smtp-transport",

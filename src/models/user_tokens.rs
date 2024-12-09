@@ -69,8 +69,24 @@ impl UserToken {
         }
     }
 
+    pub async fn validate_user_email(&self, conn: &Transaction<'_>) -> anyhow::Result<u64> {
+        
+    }
+
     pub fn get_id(&self) -> Uuid {
         self.user_token_id
+    }
+
+    pub fn is_used(&self) -> bool {
+        self.user_token_used
+    }
+
+    pub fn is_expired(&self) -> bool {
+        self.user_token_expires_at < Utc::now()
+    }
+
+    pub fn get_expired_time(&self) -> DateTime<Utc> {
+        self.user_token_expires_at
     }
 }
 
