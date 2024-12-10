@@ -1,5 +1,3 @@
-// POST /auth/verify-email
-
 use std::sync::Arc;
 
 use anyhow::anyhow;
@@ -19,11 +17,13 @@ use crate::{
     },
 };
 
+// request
 #[derive(Deserialize)]
 pub struct VerifyEmailForm {
     token_id: Uuid,
 }
 
+// response
 #[derive(Serialize)]
 pub struct VerifyEmailResponse {
     success: bool,
@@ -42,6 +42,7 @@ pub struct VerifyEmailResponseMeta {
     timestamp: DateTime<Utc>,
 }
 
+// POST /api/auth/validate-email
 pub async fn verify_email(
     State(state): State<Arc<ServerState>>,
     Json(body): Json<VerifyEmailForm>,

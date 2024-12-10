@@ -50,6 +50,7 @@ pub struct SignupResponseMeta {
     timestamp: DateTime<Utc>,
 }
 
+// POST /api/auth/signup
 pub async fn signup(
     State(state): State<Arc<ServerState>>,
     Json(body): Json<UserForm>,

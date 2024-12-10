@@ -79,7 +79,16 @@ impl UserToken {
         {
             Ok(count) => {
                 if count == 1 {
-                    Ok(())
+                    match conn.execute("UPDATE v1.user_tokens SET user_token_used = true WHERE user_token_id = $1", &[&self.user_token_id]).await {
+                        Ok(count) => {
+                            if count == 1 {
+                                Ok(())
+                            } else {
+                                Err(anyhow!("Failed to update user token: No matching token found or updated count is not 1."))
+                            }
+                        }
+                        Err(e) => Err(anyhow::Error::from(e)),
+                    }
                 } else {
                     Err(anyhow!("Was already verified."))
                 }

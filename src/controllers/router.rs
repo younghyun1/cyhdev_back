@@ -13,7 +13,7 @@ use super::{
 pub fn generate_router(state: &Arc<ServerState>) -> axum::Router {
     axum::Router::new()
         .route("/api/auth/signup", post(signup))
-        .route("/api/auth/verify_email", post(verify_email))
+        .route("/api/auth/validate-email", post(verify_email))
         .layer(CompressionLayer::new())
         .layer(from_fn(print_request_info))
         .with_state(Arc::clone(state))
