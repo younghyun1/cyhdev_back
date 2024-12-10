@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::{Object, Transaction};
 use serde_derive::{Deserialize, Serialize};
@@ -69,8 +70,22 @@ impl UserToken {
         }
     }
 
-    pub async fn validate_user_email(&self, conn: &Transaction<'_>) -> anyhow::Result<u64> {
-        
+    pub async fn validate_user_email(&self, conn: &Transaction<'_>) -> anyhow::Result<()> {
+        match conn.execute(
+            "UPDATE v1.users SET user_email_verified = true WHERE user_id = $1 AND user_email_verified = false",
+            &[&self.user_token_user_id],
+        )
+        .await
+        {
+            Ok(count) => {
+                if count == 1 {
+                    Ok(())
+                } else {
+                    Err(anyhow!("Was already verified."))
+                }
+            },
+            Err(e) => Err(anyhow::Error::from(e)),
+        }
     }
 
     pub fn get_id(&self) -> Uuid {

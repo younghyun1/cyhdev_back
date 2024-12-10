@@ -38,7 +38,7 @@ pub async fn redirect_http_to_https() {
         parts.scheme = Some(axum::http::uri::Scheme::HTTPS);
 
         if parts.path_and_query.is_none() {
-            parts.path_and_query = Some("/".parse().unwrap());
+            parts.path_and_query = Some(unsafe { "/".parse().unwrap_unchecked() });
         }
 
         let https_host = host.replace(&ports.http.to_string(), &ports.https.to_string());
@@ -58,9 +58,17 @@ pub async fn redirect_http_to_https() {
     };
 
     let addr = SocketAddr::from(([127, 0, 0, 1], ports.http));
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, redirect.into_make_service())
-        .await
-        .unwrap();
+    match tokio::net::TcpListener::bind(addr).await {
+        Ok(listener) => {
+            match listener.local_addr() {
+                Ok(local_addr) => tracing::debug!("listening on {}", local_addr),
+                Err(e) => tracing::error!("failed to get local address: {}", e),
+            }
+
+            if let Err(e) = axum::serve(listener, redirect.into_make_service()).await {
+                tracing::error!("axum server error: {}", e);
+            }
+        }
+        Err(e) => tracing::error!("failed to bind to address: {}", e),
+    }
 }

@@ -2,8 +2,10 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use axum::{extract::State, response::IntoResponse, Json};
+use chrono::{DateTime, Utc};
 use lettre::{message::Mailbox, AsyncTransport, Message};
 use reqwest::StatusCode;
+use serde_derive::Serialize;
 use tokio_postgres::error::SqlState;
 use tracing::error;
 use uuid::Uuid;
@@ -30,6 +32,24 @@ use crate::{
 //     pub user_password: String,
 // }
 
+#[derive(Serialize)]
+pub struct SignupResponse {
+    success: bool,
+    data: SignupResponseData,
+    meta: SignupResponseMeta,
+}
+
+#[derive(Serialize)]
+pub struct SignupResponseData {
+    user: UserTruncated,
+}
+
+#[derive(Serialize)]
+pub struct SignupResponseMeta {
+    time_taken: String,
+    timestamp: DateTime<Utc>,
+}
+
 pub async fn signup(
     State(state): State<Arc<ServerState>>,
     Json(body): Json<UserForm>,
@@ -55,18 +75,24 @@ pub async fn signup(
     // insert new user into DB
     let returned_user: UserTruncated = match body.insert(&transaction).await {
         Ok(user) => user,
-        Err(e) => match *e.as_db_error().unwrap().code() {
-            SqlState::UNIQUE_VIOLATION => {
-                return ErrResp::from(
-                    ErrRespDat::USER_ALREADY_EXISTS,
-                    &stopwatch,
-                    anyhow!("User already exists! Please use another email and screen name."),
-                )
-                .into_response();
-            }
-            _ => {
+        Err(e) => match e.as_db_error() {
+            Some(db_error) => match *db_error.code() {
+                SqlState::UNIQUE_VIOLATION => {
+                    return ErrResp::from(
+                        ErrRespDat::USER_ALREADY_EXISTS,
+                        &stopwatch,
+                        anyhow!("User already exists! Please use another email and screen name."),
+                    )
+                    .into_response();
+                }
+                _ => {
+                    return ErrResp::from(ErrRespDat::COULD_NOT_INSERT_USER, &stopwatch, anyhow!(e))
+                        .into_response()
+                }
+            },
+            None => {
                 return ErrResp::from(ErrRespDat::COULD_NOT_INSERT_USER, &stopwatch, anyhow!(e))
-                    .into_response()
+                    .into_response();
             }
         },
     };
@@ -109,7 +135,7 @@ pub async fn signup(
                 // construct email
                 async move {
                     let email: Message = match Message::builder()
-                        .from(SMTP_EMAIL.parse().unwrap())
+                        .from(unsafe {SMTP_EMAIL.parse().unwrap_unchecked()})
                         .to(match body_user_email.parse::<Mailbox>() {
                             Ok(mb) => mb,
                             Err(e) => {
@@ -140,7 +166,18 @@ pub async fn signup(
             });
 
             // serialize user w. truncated password hash for return
-            let encoded_user = match bincode::serialize(&returned_user) {
+            let signup_response = SignupResponse {
+                success: true,
+                data: SignupResponseData {
+                    user: returned_user,
+                },
+                meta: SignupResponseMeta {
+                    time_taken: format!("{:?}", stopwatch.get_original_start().elapsed()),
+                    timestamp: Utc::now(),
+                },
+            };
+
+            let signup_response = match bincode::serialize(&signup_response) {
                 Ok(encoded) => encoded,
                 Err(e) => {
                     return ErrResp::from(
@@ -157,10 +194,11 @@ pub async fn signup(
             return (
                 StatusCode::CREATED,
                 [("Content-Type", "application/octet-stream")],
-                encoded_user,
+                signup_response,
             )
                 .into_response();
         }
+
         Err(e) => {
             error!("Could not commit transaction: {:?}", e);
             return ErrResp::from(

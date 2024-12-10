@@ -140,4 +140,14 @@ impl ErrRespDat {
         message: "The provided user token has expired; ",
         status_code: 401, // UNAUTHORIZED
     };
+    pub const USER_ALREADY_VERIFIED: ErrRespDat = ErrRespDat {
+        code: 15,
+        message: "The user is already verified; ",
+        status_code: 409, // CONFLICT
+    };
+    pub const COULD_NOT_BUILD_RESPONSE: ErrRespDat = ErrRespDat {
+        code: 16,
+        message: "Could not build response; ",
+        status_code: 500, // INTERNAL SERVER ERROR
+    };
 }

@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use axum::{
-    middleware::from_fn,
-    routing::{get, post},
-};
+use axum::{middleware::from_fn, routing::post};
 use tower_http::compression::CompressionLayer;
 
 use crate::utils::server_init::server_state_def::ServerState;
