@@ -1,3 +1,1 @@
-pub struct JWT {
-    
-}
+pub struct JWT {}
