@@ -4,7 +4,6 @@ use anyhow::anyhow;
 use axum::{extract::State, response::IntoResponse, Json};
 use chrono::{DateTime, Utc};
 use lettre::{message::Mailbox, AsyncTransport, Message};
-use reqwest::StatusCode;
 use serde_derive::Serialize;
 use tokio_postgres::error::SqlState;
 use tracing::error;
@@ -20,6 +19,7 @@ use crate::{
     utils::{
         errors::errors::{ErrResp, ErrRespDat},
         gadgets::{regex::pw_regex_custom, stopwatch::Stopwatch},
+        serde::serialize_to_response::serialize_to_response,
         server_init::server_state_def::ServerState,
     },
 };
@@ -178,26 +178,7 @@ pub async fn signup(
                 },
             };
 
-            let signup_response = match bincode::serialize(&signup_response) {
-                Ok(encoded) => encoded,
-                Err(e) => {
-                    return ErrResp::from(
-                        ErrRespDat::COULD_NOT_SERIALIZE_BINCODE,
-                        &stopwatch,
-                        anyhow!(e),
-                    )
-                    .into_response()
-                }
-            };
-
-            // api response; deserialize with shared data definitions on rust front-end app using 'bincode'
-            // will be gzip compressed by middleware; expected 50%+ lighter than equivalent JSON and possibly more secure against dumber scrapers
-            (
-                StatusCode::CREATED,
-                [("Content-Type", "application/octet-stream")],
-                signup_response,
-            )
-                .into_response()
+            serialize_to_response(&signup_response, &stopwatch)
         }
 
         Err(e) => {

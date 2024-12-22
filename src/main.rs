@@ -5,21 +5,26 @@ pub mod models {
     pub mod user_tokens;
     pub mod users;
 }
+
 pub mod controllers {
     pub mod middleware {
         pub mod request_response_info;
     }
     pub mod auth {
+        pub mod login;
         pub mod signup;
         pub mod verify_email;
     }
     pub mod macros;
     pub mod router;
 }
+
 pub mod utils {
     pub mod errors {
-
         pub mod errors;
+    }
+    pub mod serde {
+        pub mod serialize_to_response;
     }
     pub mod gadgets {
         pub mod argon;

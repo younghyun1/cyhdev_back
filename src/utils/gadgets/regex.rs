@@ -23,7 +23,7 @@ pub fn pw_regex_custom(pw: &str) -> bool {
             has_lower = true;
         } else if c.is_ascii_digit() {
             has_digit = true;
-        } else if matches!(c, '@' | '$' | '!' | '%' | '*' | '?' | '&' | '#') {
+        } else if "!@#$%*?&^()-_+={}[]:;'<>.,/|~`".contains(c) {
             has_special = true;
         }
 

@@ -9,7 +9,6 @@ pub fn hash_password(password: &str) -> String {
     let argon2 = Argon2::default();
     let password_hash = argon2
         .hash_password(password.as_bytes(), &salt)
-        .map_err(|e| anyhow::anyhow!(e))
         .unwrap_or_else(|e| panic!("Failed to hash password: {:?}", e))
         .to_string();
 

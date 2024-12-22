@@ -13,6 +13,7 @@ use crate::{
     utils::{
         errors::errors::{ErrResp, ErrRespDat},
         gadgets::stopwatch::Stopwatch,
+        serde::serialize_to_response::serialize_to_response,
         server_init::server_state_def::ServerState,
     },
 };
@@ -128,28 +129,5 @@ pub async fn verify_email(
         },
     };
 
-    let serialized_response = match bincode::serialize(&response) {
-        Ok(data) => data,
-        Err(e) => {
-            error!("Could not serialize response: {:?}", e);
-            return ErrResp::from(
-                ErrRespDat::COULD_NOT_SERIALIZE_BINCODE,
-                &stopwatch,
-                anyhow!("Failed to serialize response!"),
-            )
-            .into_response();
-        }
-    };
-
-    match axum::response::Response::builder()
-        .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
-        .body(axum::body::Body::from(serialized_response))
-    {
-        Ok(response) => response,
-        Err(e) => {
-            error!("Failed to build response: {:?}", e);
-            ErrResp::from(ErrRespDat::COULD_NOT_BUILD_RESPONSE, &stopwatch, anyhow!(e))
-                .into_response()
-        }
-    }
+    serialize_to_response(&response, &stopwatch)
 }
