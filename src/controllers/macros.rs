@@ -4,8 +4,8 @@ macro_rules! get_conn {
         match $state.get_conn().await {
             Ok(conn) => conn,
             Err(e) => {
-                return crate::utils::errors::errors::ErrResp::from(
-                    crate::utils::errors::errors::ErrRespDat::COULD_NOT_GET_CONN_FROM_POOL,
+                return $crate::utils::errors::errors::ErrResp::from(
+                    $crate::utils::errors::errors::ErrRespDat::COULD_NOT_GET_CONN_FROM_POOL,
                     &$stopwatch,
                     e,
                 )

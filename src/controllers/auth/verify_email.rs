@@ -148,8 +148,8 @@ pub async fn verify_email(
         Ok(response) => response,
         Err(e) => {
             error!("Failed to build response: {:?}", e);
-            return ErrResp::from(ErrRespDat::COULD_NOT_BUILD_RESPONSE, &stopwatch, anyhow!(e))
-                .into_response();
+            ErrResp::from(ErrRespDat::COULD_NOT_BUILD_RESPONSE, &stopwatch, anyhow!(e))
+                .into_response()
         }
     }
 }

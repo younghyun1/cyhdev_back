@@ -192,22 +192,22 @@ pub async fn signup(
 
             // api response; deserialize with shared data definitions on rust front-end app using 'bincode'
             // will be gzip compressed by middleware; expected 50%+ lighter than equivalent JSON and possibly more secure against dumber scrapers
-            return (
+            (
                 StatusCode::CREATED,
                 [("Content-Type", "application/octet-stream")],
                 signup_response,
             )
-                .into_response();
+                .into_response()
         }
 
         Err(e) => {
             error!("Could not commit transaction: {:?}", e);
-            return ErrResp::from(
+            ErrResp::from(
                 ErrRespDat::COULD_NOT_COMMIT_TRANSACTION,
                 &stopwatch,
                 anyhow!(e),
             )
-            .into_response();
+            .into_response()
         }
-    };
+    }
 }

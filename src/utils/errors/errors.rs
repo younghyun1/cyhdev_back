@@ -35,15 +35,15 @@ impl IntoResponse for ErrResp {
     fn into_response(self) -> axum::response::Response {
         let serialized_body =
             bincode::serialize(&self).expect("Failed to serialize ErrResp with bincode");
-        let response = match axum::response::Response::builder()
+        
+        match axum::response::Response::builder()
             .status(self.data.status_code)
             .header("Content-Type", "application/octet-stream")
             .body(axum::body::Body::from(serialized_body))
         {
             Ok(resp) => resp,
             Err(e) => panic!("Failed to build Axum response: {:?}", e),
-        };
-        response
+        }
     }
 }
 
